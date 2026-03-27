@@ -1,18 +1,19 @@
-#Statistics Netherlands (CBS) publishes its StatLine tables through a public OData API,
+# Statistics Netherlands (CBS) publishes its StatLine tables through a public OData API,
 # which returns data in a structured, machine‑readable format (JSON/XML).
 # CBS explicitly supports Python users by providing the cbsodata package,
-# which is a thin, documented client around this API. [cbs.nl], [cbs.nl]
+# which is a thin, documented client around this API.
 
 # Using this method means:
 # You are not manually downloading files
 # Anyone can re-run your code and get the same data
 # That’s why this approach is considered fully reproducible and reviewer‑friendly.
 
-#Every CBS table has a stable identifier.
+# Every CBS table has a stable identifier.
 
 import pandas as pd
 import cbsodata
 import matplotlib.pyplot as plt
+import numpy as np
 
 TABLE_ID = "86217NED"
 
@@ -91,10 +92,12 @@ def main():
     # 10) Sort for display (low to high EPO share)
     d = d.sort_values("EPO_share_pct", ascending=True)
 
-    # 11) Plot horizontal bar chart
+    # 11) Plot horizontal bar chart (EPO share)  ✅ UPDATED: add 80% line
     plt.figure(figsize=(10, 8))
     plt.barh(d["TechLabel"], d["EPO_share_pct"])
-    plt.axvline(50, linestyle="--", linewidth=1)  # optional 50% reference line
+
+    plt.axvline(50, linestyle="--", linewidth=1)  # reference at 50%
+    plt.axvline(80, linestyle=":", linewidth=1)   # reference at 80% (strongly international)
 
     plt.title(f"EPO share of patent applications by CPC technology area (Netherlands, {latest_year})")
     plt.xlabel("EPO share of applications (%)")
@@ -104,17 +107,12 @@ def main():
     plt.savefig("epo_share_by_cpc_latest_year.png", dpi=200)
     plt.show()
 
-    import numpy as np  # ensure this import is at the top of your file
-
     # --- SECOND CHART (ranked): Absolute patent applications (EPO vs OCNL) ---
 
     # Rank sectors by absolute volume (EPO + OCNL), descending
     d_abs = d.copy()
     d_abs["TotalApps"] = d_abs[COL_EPO_APPS] + d_abs[COL_OCNL_APPS]
     d_abs = d_abs.sort_values("TotalApps", ascending=False)
-
-    # (Optional) if you want to keep the same TOP_N, keep it here:
-    # d_abs = d_abs.head(TOP_N)
 
     # Prepare positions for grouped horizontal bars
     y = np.arange(len(d_abs))
